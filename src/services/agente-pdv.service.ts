@@ -8,7 +8,8 @@ import type {
   Caixa,
   AbrirCaixaDto,
   FecharCaixaDto,
-  HealthCheck
+  HealthCheck,
+  Empresa
 } from '../types'
 
 // ============================================================================
@@ -158,6 +159,17 @@ export const caixaService = {
     const { data } = await api.get<Caixa[]>('/api/caixa', {
       params: { numeroTerminal, dataInicio, dataFim }
     })
+    return data
+  }
+}
+
+// ============================================================================
+// EMPRESAS
+// ============================================================================
+export const empresaService = {
+  // Obter dados da empresa
+  obter: async (): Promise<Empresa | null> => {
+    const { data } = await api.get<Empresa | null>('/api/empresas')
     return data
   }
 }

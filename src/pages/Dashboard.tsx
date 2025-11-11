@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { healthService, caixaService } from '../services/agente-pdv.service'
+import { healthService, caixaService, empresaService } from '../services/agente-pdv.service'
 import { useCaixaStore } from '../stores/caixa.store'
 import { useNavigate } from 'react-router-dom'
 import AbrirCaixaModal from '../components/AbrirCaixaModal'
@@ -8,6 +8,7 @@ import FecharCaixaModal from '../components/FecharCaixaModal'
 import ConsultaProdutosModal from '../components/ConsultaProdutosModal'
 import SincronizacaoModal from '../components/SincronizacaoModal'
 import ConnectionStatus from '../components/ConnectionStatus'
+import InfoEmpresaModal from '../components/InfoEmpresaModal'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [modalConsultaProdutos, setModalConsultaProdutos] = useState(false)
   const [modalSincronizacao, setModalSincronizacao] = useState(false)
+  const [modalInfoEmpresa, setModalInfoEmpresa] = useState(false)
   
   // Health check do Agente PDV
   const { isError: healthError } = useQuery({
@@ -33,6 +35,17 @@ export default function Dashboard() {
     queryFn: () => caixaService.obterAberto(numeroTerminal),
     enabled: !!numeroTerminal,
   })
+
+  // Buscar dados da empresa
+  const { data: empresa } = useQuery({
+    queryKey: ['empresa'],
+    queryFn: empresaService.obter,
+    enabled: !healthError,
+    retry: false,
+  })
+
+  // Mostrar ícone se o endpoint responder (mesmo que null)
+  const mostrarIconeEmpresa = empresa !== undefined
   
   return (
     <div className="h-screen flex bg-gray-50 overflow-hidden">
@@ -146,7 +159,25 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold text-gray-900">Solis PDV</h1>
               <span className="text-sm text-gray-500">Terminal {numeroTerminal}</span>
             </div>
-            <ConnectionStatus />
+            <div className="flex items-center gap-4">
+              {mostrarIconeEmpresa && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setModalInfoEmpresa(true)
+                  }}
+                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Informações da Empresa"
+                >
+                  <svg className="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
+              <ConnectionStatus />
+            </div>
           </div>
         </header>
 
@@ -169,6 +200,24 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-600">Terminal {numeroTerminal}</p>
                 </div>
               </div>
+              
+              {/* Botão Info Empresa - Mobile */}
+              {mostrarIconeEmpresa && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setModalInfoEmpresa(true)
+                  }}
+                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Informações da Empresa"
+                >
+                  <svg className="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
             </div>
             
             {/* Status de Conexões - Mobile */}
@@ -323,6 +372,12 @@ export default function Dashboard() {
       <SincronizacaoModal 
         isOpen={modalSincronizacao}
         onClose={() => setModalSincronizacao(false)}
+      />
+
+      {/* Modal Info Empresa */}
+      <InfoEmpresaModal 
+        isOpen={modalInfoEmpresa}
+        onClose={() => setModalInfoEmpresa(false)}
       />
     </div>
   )

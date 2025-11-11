@@ -192,3 +192,27 @@ export interface ApiResponse<T> {
   error?: string
   message?: string
 }
+
+// Empresa
+export interface Empresa {
+  id: string
+  cnpj: string
+  razaoSocial: string
+  nomeFantasia: string
+  inscricaoEstadual?: string
+  inscricaoMunicipal?: string
+  telefone?: string
+  email?: string
+  logradouro?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  cidade?: string
+  uf?: string
+  cep?: string
+  regimeTributario?: string
+  sincronizado: boolean
+  sincronizadoEm?: string
+  createdAt: string
+  updatedAt: string
+}

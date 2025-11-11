@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { syncService } from '../services/sync.service'
 import { statusService, type SystemStatus } from '../services/status.service'
 import type { SyncStatus } from '../services/sync.service'
@@ -12,6 +12,7 @@ interface SincronizacaoModalProps {
 export default function SincronizacaoModal({ isOpen, onClose }: SincronizacaoModalProps) {
   const [syncItems, setSyncItems] = useState<SyncStatus[]>([])
   const [syncingAll, setSyncingAll] = useState(false)
+  const queryClient = useQueryClient()
 
   // Verificar status de conexão com a internet
   const { data: connectionStatus } = useQuery<SystemStatus>({
@@ -63,10 +64,16 @@ export default function SincronizacaoModal({ isOpen, onClose }: SincronizacaoMod
     onSuccess: (data) => {
       updateItemStatus('empresas', 'success', undefined, data.total)
       localStorage.setItem('sync_empresas_ultima', new Date().toISOString())
-      setTimeout(() => refetch(), 1000)
+      setTimeout(() => {
+        refetch()
+        // Invalidar query da empresa para atualizar no Dashboard
+        queryClient.invalidateQueries({ queryKey: ['empresa'] })
+      }, 1000)
     },
     onError: (error: any) => {
-      updateItemStatus('empresas', 'error', error.message)
+      console.error('Erro ao sincronizar empresas:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido'
+      updateItemStatus('empresas', 'error', errorMessage)
     }
   })
 
